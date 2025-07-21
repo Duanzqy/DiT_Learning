@@ -1,6 +1,6 @@
 # Video-DiT
 ---
-## RoPE（Rotary Position Embedding）数学原理详解
+## RoPE
 
 ### 1. 简介
 
@@ -118,7 +118,7 @@ RoPE通过简单高效的旋转，将位置信息编码进向量空间。其核�
 
 
 
-## RMSNorm 数学原理简述
+## RMSNorm 
 
 ### 1. 简介
 
@@ -186,7 +186,7 @@ def rmsnorm(x, gamma, eps):
 
 RMSNorm 通过均方根归一化，使输入向量具有统一的尺度，并通过可学习参数适应不同特征分布。它是现代大模型常用的高效归一化方式。
 
-## Attention 部分
+## Attention 
 
 ### Attention调用
 ```

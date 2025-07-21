@@ -10,8 +10,8 @@
 
 ---
 ### DiT部分说明文档：
-- [[docx/DiT|Video_DiT]]：
-	1. [[docx/DiT#RoPE（Rotary Position Embedding）数学原理详解|RoPE]]
-	2. [[docx/DiT#RMSNorm 数学原理简述|RMSNorm]]
-	3. [[docx/DiT#Attention 部分|Attention]]
-	4. [[docx/DiT#DiTBlock|DiTBlock]]
+- [Video_DiT](docx/DiT)
+	1. [RoPE](docx/DiT#RoPE)
+	2. [RMSNorm](docx/DiT#RMSNorm)
+	3. [Attentioin](docx/DiT#Attention)
+	4. [DiTBlock](docx/DiT#DiTBlock)
