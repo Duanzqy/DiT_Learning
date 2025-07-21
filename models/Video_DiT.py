@@ -112,6 +112,8 @@ class RMSNorm(nn.Module):
         dtype = x.dtype
         return x.norm(x.to(float)).to(dtype) * self.weight
 
+
+
 ### Attention
 
 def flash_attention(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, num_heads: int, compatibility_mode=False):
@@ -225,3 +227,39 @@ class CrossAttention(nn.Module):
                 x = x + x_img
 
             return self.o(x)     
+    
+
+##### DiTBlock
+class DiTBlock(nn.Module):
+    def __init__(self, dim: int, num_heads: int, ffn_dim: int, eps: float = 1e-6, has_image_input: bool =False):
+        super().__init__()
+        self.has_image_input = has_image_input
+        self.num_heads = num_heads
+        self.ffn_dim = ffn_dim
+
+        self.self_attn = SelfAttention(dim, num_heads, eps)
+        self.cross_attn = CrossAttention(dim, num_heads, eps, has_image_input)
+        self.ffn = nn.Sequential(
+            nn.Linear(dim, ffn_dim),
+            nn.GELU(approximate="tanh"),
+            nn.Linear(ffn_dim, dim)
+        )
+        self.norm1 = nn.LayerNorm(dim, elementwise_affine=False)
+        self.norm2 = nn.LayerNorm(dim, elementwise_affine=False)
+        self.norm3 = nn.LayerNorm(dim)
+
+        self.modulation = nn.Parameter(nn.randn(1, 6, dim) / dim** 0.5)
+
+    def forward(self, x, context, freqs, t_mod):
+        # msa means multi-head self attention, mlp means multi-layer perceptron
+        msa_shift, msa_scale, msa_gate, mlp_shift, mlp_scale, mlp_gate = (
+            self.modulation.to(dtype=t_mod.dtype, device=t_mod.device) + t_mod).chunk(6, dim=1)
+        input_x = modulate(self.norm1(x), msa_shift, msa_scale)
+        x = input_x + msa_gate * self.self_attn(input_x, freqs)
+
+        x = x + self.cross_attn(self.norm3(x), context)
+
+        input_x = modulate(self.norm2(x), mlp_shift, mlp_scale)
+        x = x + mlp_gate * self.ffn(input_x)
+
+        return x

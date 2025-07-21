@@ -1,15 +1,14 @@
 # Video-DiT
+---
+## RoPE（Rotary Position Embedding）数学原理详解
 
-
-# RoPE（Rotary Position Embedding）数学原理详解
-
-## 1. 简介
+### 1. 简介
 
 Rotary Position Embedding（RoPE，旋转位置编码）是一种在Transformer模型中编码位置信息的方法。与传统的正弦余弦位置编码不同，RoPE将嵌入空间中的每一对维度视为一个二维平面，并在该平面上以与位置相关的角度进行旋转，从而将位置信息嵌入到模型的表达中。
 
 ---
 
-## 2. 数学公式
+### 2. 数学公式
 
 ### 2.1 频率构造
 
@@ -69,7 +68,7 @@ $$
 
 ---
 
-## 3. RoPE应用于注意力机制
+### 3. RoPE应用于注意力机制
 
 在多头自注意力中，Query和Key向量通过上述旋转后参与点积：
 
@@ -81,7 +80,7 @@ $$
 
 ---
 
-## 4. PyTorch代码实现对应
+### 4. PyTorch代码实现对应
 
 ```python
 def precompute_freqs_cis(dim: int, end: int = 1024, theta: float = 10000.0):
@@ -96,22 +95,38 @@ def precompute_freqs_cis(dim: int, end: int = 1024, theta: float = 10000.0):
 - `torch.polar` 生成单位复数 $e^{i\phi_k}$，用于后续嵌入向量的旋转
 
 ---
+3D 位置编码
+```python
+def precompute_freqs_cis_3d(dim: int, end: int = 1024, theta: float = 10000.0):
+    # precompute rope for 3d
+    f_freqs_cis = precompute_freqs_cis(dim - 2 * (dim//3), end, theta)
+    h_freqs_cis = precompute_freqs_cis(dim // 3, end, theta)
+    w_freqs_cis = precompute_freqs_cis(dim // 3, end, theta)
+    return f_freqs_cis, h_freqs_cis, w_freqs_cis
+```
+##### 为什么这里的h、w的频率编码是一样的？
+	- 由于输入参数都是 `dim // 3`，`end`，`theta`，这两次调用会产生**同样长度和频率分布**的编码“组”
+	- 但实际编码内容不同，这些频率编码会分别应用于 height（h）和 width（w）这两个空间维度的位置。
+- 这里为什么要用 `dim - 2 * (dim // 3)` 作为第一个维度的大小？
+	- 输入的 dim 是**输入特征的通道维度**，也就是每个时空位置（如一帧中的一个像素点，或一个 patch）的 embedding 维数。这个 `dim` 一般是 Transformer 或神经网络层输出的特征向量长度。
+	- 要将 dim 分配给3个空间维度（比如 frame、height、width，或者 depth、height、width），分别做 3D RoPE 编码，通常尽量平分为三份，但 dim 不一定为3的倍数，故这样划分保证三部分加起来为 dim 
 
-## 5. 总结
+---
+### 5. 总结
 
 RoPE通过简单高效的旋转，将位置信息编码进向量空间。其核心优势是支持长序列、易于并行计算，并能直接嵌入到Transformer的注意力机制中。
 
 
 
-# RMSNorm 数学原理简述
+## RMSNorm 数学原理简述
 
-## 1. 简介
+### 1. 简介
 
 **RMSNorm**（Root Mean Square Normalization）是一种用于深度学习模型中的归一化方法。它在Transformer、LLM等模型中被广泛使用，其优点是计算简单、效率高，并且无需减去均值。RMSNorm常被用作LayerNorm的替代方案。
 
 ---
 
-## 2. 数学公式
+### 2. 数学公式
 
 给定输入向量 $x \in \mathbb{R}^d$，RMSNorm 的归一化公式如下：
 
@@ -127,7 +142,7 @@ $$
 
 ---
 
-## 3. 逐步解释
+### 3. 逐步解释
 
 1. **计算均方根：**
    $$
@@ -149,14 +164,14 @@ $$
 
 ---
 
-## 4. 与 LayerNorm 的比较
+### 4. 与 LayerNorm 的比较
 
 - **LayerNorm** 先减去均值再除以标准差（整体零均值单位方差）。
 - **RMSNorm** 仅除以均方根，不减均值，计算更简便，效率更高。
 
 ---
 
-## 5. PyTorch 伪代码对应
+### 5. PyTorch 伪代码对应
 
 ```python
 def rmsnorm(x, gamma, eps):
@@ -167,13 +182,11 @@ def rmsnorm(x, gamma, eps):
 
 ---
 
-## 6. 总结
+### 6. 总结
 
 RMSNorm 通过均方根归一化，使输入向量具有统一的尺度，并通过可学习参数适应不同特征分布。它是现代大模型常用的高效归一化方式。
 
-
-
-# Attention 部分
+## Attention 部分
 
 ### Attention调用
 ```
@@ -200,3 +213,71 @@ class AttentionModule(nn.Module):
 
 
 ### 自注意力机制
+1. 输入 x，先做线性映射和 RMS 归一化，得到 query 和 key；value 只做线性映射
+2. 对 q、k 应用 rope_apply（即 RoPE 位置编码）
+3. 用 AttentionModule 计算注意力
+4. 输出经过 output 层变换
+
+### 交叉注意力机制
+1. 输入 x（主输入）和 y（上下文）。
+2. 如果有图片输入，将 y 拆成 img（前257个）和 ctx（context缩写）（剩下的）。
+3. q 来自 x；k, v 来自 ctx。
+4. 先对 ctx 做注意力。
+5. 如果有图像输入，对 img 做注意力，结果加到 x 上。
+6. 最后通过输出线性层 o
+
+
+
+## DiTBlock
+```python
+class DiTBlock(nn.Module):
+    def __init__(self, has_image_input: bool, dim: int, num_heads: int, ffn_dim: int, eps: float = 1e-6):
+        super().__init__()
+        ... # 其他初始化
+        self.norm1 = nn.LayerNorm(dim, eps=eps, elementwise_affine=False)
+        self.norm2 = nn.LayerNorm(dim, eps=eps, elementwise_affine=False)
+        self.norm3 = nn.LayerNorm(dim, eps=eps)
+        self.ffn = nn.Sequential(nn.Linear(dim, ffn_dim), nn.GELU(
+            approximate='tanh'), nn.Linear(ffn_dim, dim))
+        self.modulation = nn.Parameter(torch.randn(1, 6, dim) / dim**0.5) # 可学习的参数
+    def forward(self, x, context, t_mod, freqs):
+        # msa: multi-head self-attention  mlp: multi-layer perceptron
+        shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = (
+            self.modulation.to(dtype=t_mod.dtype, device=t_mod.device) + t_mod).chunk(6, dim=1)    # 基础调制 + 时间相关调制
+        input_x = modulate(self.norm1(x), shift_msa, scale_msa)
+        x = x + gate_msa * self.self_attn(input_x, freqs)
+        x = x + self.cross_attn(self.norm3(x), context)
+        input_x = modulate(self.norm2(x), shift_mlp, scale_mlp)
+        x = x + gate_mlp * self.ffn(input_x)
+        return x
+```
+##### 归一化层
+```python
+self.norm1 = nn.LayerNorm(dim, eps=eps, elementwise_affine=False)
+self.norm2 = nn.LayerNorm(dim, eps=eps, elementwise_affine=False)
+self.norm3 = nn.LayerNorm(dim, eps=eps)
+```
+- 前面两层不可学习，因为前两层的 shift、scale 参数在后续通过时间进行调制，如下所示
+```python
+shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = (
+            self.modulation.to(dtype=t_mod.dtype, device=t_mod.device) + t_mod).chunk(6, dim=1)    # 基础调制 + 时间相关调制
+```
+- 这两层的 shift、scale 参数加入了时间相关的信息，为了让模型不同扩散步有不同“策略”，极大提升了扩散模型的表达力与生成质量
+
+##### 门控残差连接
+```python
+x = x + gate_msa * self.self_attn(input_x, freqs)
+x = x + gate_mlp * self.ffn(input_x)
+```
+
+- 其中 `gate` 是一个**动态生成的标量或向量**（通常shape与F(x)一致），用于“门控”子模块输出对残差流的贡献度。
+- `gate` 的取值可以在[0, 1]之间（如果用sigmoid），也可以不限制范围（直接线性）
+- 这里的两个 gate 通过“时间调制”机制动态生成的（可随扩散步t变化）
+- gate是由当前扩散步调制的，模型能学会在不同t步“侧重”不同分支（比如早期多用FFN，后期多用Attention）
+##### FFN网络设计
+```python
+self.ffn = nn.Sequential(nn.Linear(dim, ffn_dim), nn.GELU(approximate='tanh'), nn.Linear(ffn_dim, dim))
+```
+- 升维→激活→降维
+- GELU（Gaussian Error Linear Unit）是Transformer和Diffusion模型常见的激活函数，效果比ReLU好
+- DiTBlock中的FFN（MLP）采用“升维→GELU→降维”结构，是Transformer中最常见和有效的MLP设计，能显著提升特征处理和模型表达能力，几乎是现代Transformer的标配。GELU激活配合近似算法，是当前最优的效率与效果折中。
