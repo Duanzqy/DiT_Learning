@@ -112,4 +112,116 @@ class RMSNorm(nn.Module):
         dtype = x.dtype
         return x.norm(x.to(float)).to(dtype) * self.weight
 
+### Attention
 
+def flash_attention(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, num_heads: int, compatibility_mode=False):
+    if compatibility_mode:
+        q = rearrange(q, "b s (n d) -> b n s d", n=num_heads)
+        k = rearrange(k, "b s (n d) -> b n s d", n=num_heads)
+        v = rearrange(v, "b s (n d) -> b n s d", n=num_heads)
+        x = F.scaled_dot_product_attention(q, k, v)
+        x = rearrange(x, "b n s d -> b s (n d)", n=num_heads)
+    elif FLASH_ATTN_3_AVAILABLE:
+        q = rearrange(q, "b s (n d) -> b s n d", n=num_heads)
+        k = rearrange(k, "b s (n d) -> b s n d", n=num_heads)
+        v = rearrange(v, "b s (n d) -> b s n d", n=num_heads)
+        x, _ = flash_attn_interface.flash_attn_func(q, k, v)
+        x = rearrange(x, "b s n d -> b s (n d)", n=num_heads)
+    elif FLASH_ATTN_2_AVAILABLE:
+        q = rearrange(q, "b s (n d) -> b s n d", n=num_heads)
+        k = rearrange(k, "b s (n d) -> b s n d", n=num_heads)
+        v = rearrange(v, "b s (n d) -> b s n d", n=num_heads)
+        x = flash_attn.flash_attn_func(q, k, v)
+        x = rearrange(x, "b s n d -> b s (n d)", n=num_heads)
+    elif SAGE_ATTN_AVAILABLE:
+        q = rearrange(q, "b s (n d) -> b n s d", n=num_heads)
+        k = rearrange(k, "b s (n d) -> b n s d", n=num_heads)
+        v = rearrange(v, "b s (n d) -> b n s d", n=num_heads)
+        x = sageattn(q, k, v)
+        x = rearrange(x, "b n s d -> b s (n d)", n=num_heads)
+    else:
+        q = rearrange(q, "b s (n d) -> b n s d", n=num_heads)
+        k = rearrange(k, "b s (n d) -> b n s d", n=num_heads)
+        v = rearrange(v, "b s (n d) -> b n s d", n=num_heads)
+        x = F.scaled_dot_product_attention(q, k, v)
+        x = rearrange(x, "b n s d -> b s (n d)", n=num_heads)
+    return x
+
+
+class AttentionModule(nn.Module):
+    def __init__(self, num_heads: int):
+        super().__init__()
+        self.num_heads = num_heads
+
+    def forward(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
+        x = flash_attention(q, k, v, num_heads= self.num_heads)
+        return x
+
+
+class SelfAttention(nn.Module):
+    def __init__(self, dim: int, num_heads: int, eps: float = 1e-6):
+        super().__init__()
+        self.num_heads = num_heads
+        self.head_dim = dim // num_heads
+
+        self.q = nn.Linear(dim, dim)
+        self.k = nn.Linear(dim, dim)
+        self.v = nn.Linear(dim, dim)
+        self.o = nn.Linear(dim, dim)
+        self.q_norm = RMSNorm(dim, eps)
+        self.k_norm = RMSNorm(dim, eps)
+
+        self.attn = AttentionModule(self.num_heads)
+
+    def forward(self, x, freqs):
+        q = self.q_norm(self.q(x))
+        k = self.k_norm(self.k(x))
+        q = rope_apply(q, freqs, self.num_heads)
+        k = rope_apply(k, freqs, self.num_heads)
+        v = self.v(x)
+        x = self.attn(q, k, v)
+        return self.o(x)
+
+
+class CrossAttention(nn.Module):
+    def __init__(self, dim: int, num_heads: int, eps: float = 1e-6, has_image_input: bool = False):
+        super().__init__()
+        self.num_heads = num_heads
+        self.head_dim = dim // num_heads
+
+        self.q = nn.Linear(dim, dim)
+        self.k = nn.Linear(dim, dim)
+        self.v = nn.Linear(dim, dim)
+        self.o = nn.Linear(dim, dim)
+        self.q_norm = RMSNorm(dim, eps)
+        self.k_norm = RMSNorm(dim, eps)
+
+        
+        self.has_image_input = has_image_input
+        # 如果有图像输入，多加两个线性层
+        if self.has_image_input:
+            self.k_img = nn.Linear(dim, dim)
+            self.v_img = nn.Linear(dim, dim)
+            self.k_img_norm = RMSNorm(dim, eps)
+
+        self.attn = AttentionModule(self.num_heads)
+
+    def forward(self, x: torch.Tensor, y: torch.tensor):
+            if self.has_image_input:
+                img = y[:, :257]
+                ctx = y[:, 257:]
+            else:
+                ctx = y
+            
+            q = self.q_norm(self.q(x))
+            k = self.k_norm(self.k(ctx))
+            v = self.v(ctx)
+            x = self.attn(q, k, v)
+
+            if self.has_image_input:
+                k_img = self.k_img_norm(self.k_img(img))
+                v_img = self.v_img(img)
+                x_img = self.attn(q, k_img, v_img)
+                x = x + x_img
+
+            return self.o(x)     

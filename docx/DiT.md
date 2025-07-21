@@ -171,3 +171,32 @@ def rmsnorm(x, gamma, eps):
 
 RMSNorm 通过均方根归一化，使输入向量具有统一的尺度，并通过可学习参数适应不同特征分布。它是现代大模型常用的高效归一化方式。
 
+
+
+# Attention 部分
+
+### Attention调用
+```
+def flash_attention(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, num_heads: int, compatibility_mode=False):
+	...
+```
+- 将 attention 逻辑集中封装，可以让高层模型代码无感知地切换不同底层实现，兼容各种库和硬件，提升项目的灵活性、可维护性和扩展性，同时代码更简洁易读，方便调试与实验。
+- 方便切换不同的实现，例如做消融实验等
+- 调用方式一致，参数形状、返回值形状统一，后续换实现、加新实现时不用改高层代码
+```
+class AttentionModule(nn.Module):
+    def __init__(self, num_heads: int):
+        super().__init__()
+        self.num_heads = num_heads
+        
+    def forward(self, q: torch.Tensor, k: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
+        x = flash_attention(q, k, v, num_heads= self.num_heads)
+        return x
+```
+##### 问题：**为什么要写一个 `AttentionModule(nn.Module)`，而不是直接用 `flash_attention` 这个函数？**
+- 将 Attention 封装为 nn.Module，可以让其像其他神经网络层一样灵活组合、扩展和管理，方便代码模块化和工程实践。**最主要还是融入Pytorch**
+	- 如果 Attention 只是一个函数，就无法方便地嵌入 Sequential、ModuleList、模型参数统计、模型保存/加载等体系。
+	- 封装成 `nn.Module` 后，可以像其他层一样灵活组合，并参与模型的 save/load、to(device)、half() 等操作。
+
+
+### 自注意力机制
