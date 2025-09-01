@@ -281,3 +281,8 @@ self.ffn = nn.Sequential(nn.Linear(dim, ffn_dim), nn.GELU(approximate='tanh'), n
 - 升维→激活→降维
 - GELU（Gaussian Error Linear Unit）是Transformer和Diffusion模型常见的激活函数，效果比ReLU好
 - DiTBlock中的FFN（MLP）采用“升维→GELU→降维”结构，是Transformer中最常见和有效的MLP设计，能显著提升特征处理和模型表达能力，几乎是现代Transformer的标配。GELU激活配合近似算法，是当前最优的效率与效果折中。
+
+
+
+## WanModel
+- 完成一步的扩散过程

@@ -1,4 +1,5 @@
-# DiT_learning
+# 项目文档
+## DiT_learning
  
 ### Target:
     follow Wan_video_DiT
@@ -13,5 +14,9 @@
 - [Video_DiT](docx/DiT.md)
 	1. [RoPE](docx/DiT.md#RoPE)
 	2. [RMSNorm](docx/DiT.md#RMSNorm)
-	3. [Attentioin](docx/DiT.md#Attention)
+	3. [Attention](docx/DiT.md#Attention)
 	4. [DiTBlock](docx/DiT.md#DiTBlock)
+
+
+## 项目进展记录
+[0825-0831](docx/08.25~08.31)

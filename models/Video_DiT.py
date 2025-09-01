@@ -263,3 +263,72 @@ class DiTBlock(nn.Module):
         x = x + mlp_gate * self.ffn(input_x)
 
         return x
+
+
+#####################################
+
+class MLP(nn.Module):
+    def __init__(self, in_dim: int, out_dim: int):
+        super().__init__()
+        self.proj = nn.Sequential(
+            nn.LayerNorm(in_dim),
+            nn.Linear(in_dim, in_dim),
+            nn.GELU(),
+            nn.Linear(in_dim, out_dim),
+            nn.LayerNorm(out_dim)
+        )
+
+    def forward(self, x):
+        return self.proj(x)
+    
+
+# Head, 这里的 Head 是指模型的输出头, 与 Transformer 中的多头注意力机制中的 Head 不同
+class Head(nn.Module):
+    def __init__(self, dim: int, out_dim: int, patch_size: Tuple[int, int, int], eps: float = 1e-6):
+        super.__init__()
+        self.dim = dim
+        self.patch_size = patch_size
+
+        self.norm = nn.LayerNorm(dim, eps, elementwise_affine= False)
+        self.head = nn.Linear(dim, out_dim * math.prod(patch_size)) 
+        self.modulation = nn.Parameter(nn.randn(1, 2, dim) / dim**0.5)
+
+    def forward(self, x, t_mod):
+        shift, scale = (self.modulation.to(dtype= t_mod.dtype, device= t_mod.device) + t_mod).chunk(2, dim = 1)
+        x = modulate(self.head(self.norm(x)), shift, scale)
+        return x
+    
+
+
+# WanModel: 一步的扩散
+class WanModel(nn.Module):
+    def __init__(
+            self,
+            dim: int,
+            in_dim: int,
+            ffn_dim: int,
+            out_dim: int,
+            text_dim: int,
+            freq_dim: int,
+            eps: float,
+            patch_size: Tuple[int, int, int],
+            num_head: int,
+            num_layers: int,
+            has_image_input: bool, 
+        ):
+            super.__init__()
+            self.dim = dim
+            self.freq_dim = freq_dim
+            self.has_image_input = has_image_input
+            self.patch_size = patch_size
+
+
+
+
+    def patchify(self):
+
+
+    def unpatchify(self):
+
+
+    def forward(self):
