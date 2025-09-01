@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "README.md",
+                "file": "docx/08.25~08.31.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "README"
+              "title": "08.25~08.31"
             }
           },
           {
@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "docx/08.25~08.31.md",
+                "file": "README.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "08.25~08.31"
+              "title": "README"
             }
           },
           {
@@ -107,7 +107,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 248.5
   },
   "right": {
     "id": "5188b388a22538b1",
@@ -199,10 +199,15 @@
   },
   "active": "b48c5eef5e642f47",
   "lastOpenFiles": [
-    "docx/08.25~08.31.md",
-    "docx/08.18~08.24.md",
     "README.md",
+    "docx/08.25~08.31.md",
     "docx/09.01~09.07.md",
+    "docx/attachment/Pasted image 20250901171210.png",
+    "docx/attachment/Pasted image 20250901171159.png",
+    "docx/attachment/Pasted image 20250901171131.png",
+    "docx/attachment/Pasted image 20250901171016.png",
+    "docx/08-26 ~08-31.md",
+    "docx/08.18~08.24.md",
     "docx/attachment/Pasted image 20250901102126.png",
     "docx/attachment/Pasted image 20250901091944.png",
     "For.md",

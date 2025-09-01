@@ -1,3 +1,7 @@
 {
-  "attachmentFolderPath": "docx/attachment"
+  "attachmentFolderPath": "docx/attachment",
+  "autoConvertHtml": false,
+  "useMarkdownLinks": true,
+  "newLinkFormat": "relative",
+  "newFileLocation": "current"
 }
