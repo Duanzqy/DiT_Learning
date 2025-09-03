@@ -48,9 +48,23 @@
               "icon": "lucide-file",
               "title": "README"
             }
+          },
+          {
+            "id": "b48c5eef5e642f47",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "docx/09.01~09.07.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "09.01~09.07"
+            }
           }
         ],
-        "currentTab": 1
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -123,7 +137,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "docx/多阶段视频数据处理框架.md",
+                "file": "docx/09.01~09.07.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -133,7 +147,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "多阶段视频数据处理框架 的反向链接列表"
+              "title": "09.01~09.07 的反向链接列表"
             }
           },
           {
@@ -171,13 +185,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "docx/多阶段视频数据处理框架.md",
+                "file": "docx/09.01~09.07.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "多阶段视频数据处理框架 的大纲"
+              "title": "09.01~09.07 的大纲"
             }
           }
         ],
@@ -198,21 +212,17 @@
       "command-palette:打开命令面板": false
     }
   },
-  "active": "32e06e3c6ef5779f",
+  "active": "b48c5eef5e642f47",
   "lastOpenFiles": [
-    "docx/08.25~08.31.md",
-    "docx/08.18~08.24.md",
-    "docx/Paper/Wan2.2 S2V.md",
-    "docx/Paper/FramePack.md",
-    "docx/attachment/Pasted image 20250903185441.png",
-    "docx/09.01~09.07.md",
     "docx/多阶段视频数据处理框架.md",
-    "docx/Paper",
+    "docx/08.25~08.31.md",
+    "docx/09.01~09.07.md",
     "README.md",
     "docx/DiT.md",
     "docx/attachment/Pasted image 20250902123720.png",
     "docx/attachment/Pasted image 20250902112322.png",
     "docx/attachment/Pasted image 20250902112247.png",
+    "docx/08.18~08.24.md",
     "docx/attachment/Pasted image 20250901172944.png",
     "docx/attachment/Pasted image 20250901172930.png",
     "docx/attachment/Pasted image 20250901171210.png",
@@ -220,6 +230,7 @@
     "docx/attachment/Pasted image 20250901171131.png",
     "docx/attachment/Pasted image 20250901171016.png",
     "docx/08-26 ~08-31.md",
+    "docx/attachment/Pasted image 20250901102126.png",
     "For.md",
     "().md",
     "docx/08.25~08-31.md",

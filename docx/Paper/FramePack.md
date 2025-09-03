@@ -1,14 +1,3 @@
-## Paper to read
-- [x] [FramePack](https://lllyasviel.github.io/frame_pack_gitpage/)
-- [ ] [wav2vec](https://arxiv.org/abs/1904.05862)
-- [ ] [EMO](https://github.com/HumanAIGC/EMO)
-
-
-## 09-01
-[视频处理框架计划](多阶段视频数据处理框架.md)
-
----
-## 09-02
 ### [FramePack](https://lllyasviel.github.io/frame_pack_gitpage/)
 
 ##### 目的：解决视频生成模型中预测下一帧时出现的 **遗忘(Forgetting)** 与 **漂移(Drifting)** 问题
@@ -26,7 +15,7 @@
   一般假设 $T >> S$ (下一帧预测模型中通常 $S=1$) 
   记每一帧的上下文长度为 $L_f$ (e.g. $L_f = 1560$ for each 480p frame in Hunyuan/Wan/Flux), 故 DiT 产生的内容量为 $L_f(T + S)$, 因此当 $T$ 很大时会爆炸
 
-![](attachment/Pasted%20image%2020250902112322.png)
+![](../attachment/Pasted%20image%2020250902112322.png)
 - **重要观察**：预测下一帧时输入的帧有不同重要程度
 	1. 排序：按重要程度进行优先级排序（最简单普遍的情况：距离预测帧时间越近的越重要），记 $F_0$ 为优先级最高的帧， $F_{T-1}$ 为优先级最低的帧
 	2. 压缩：定义 length function $\phi(F_i) = \frac{L_f}{\lambda^i}$, 表示每帧经过 VAE 与 Transformer Patchifying 后的上下文长度，其中 $\lambda > 1$ 为压缩参数，帧级压缩可以通过操作 patchify 的输入层实现
@@ -38,7 +27,7 @@
 
 
 
-![](attachment/Pasted%20image%2020250902112247.png)
+![](../attachment/Pasted%20image%2020250902112247.png)
 - **其他细节** ：
 	- 只讨论 $\lambda = 2$, 可以通过在 2 的幂级数中复制（或删除）若干特定项来表示任意压缩率
 	  例如: 1/1 + 1/2 + (1/2) + 1/4 + 1/8 + (1/8) + 1/16 + … = 2.625
@@ -51,17 +40,8 @@
 	3. 对于其他帧重要性，例如首帧重要性高的(image-to-video), 可以使用如上图d、e所示的压缩方法，提高初始帧的上下文占比
 
 ##### 2. Anti-drifting Sampling
-![](attachment/Pasted%20image%2020250902123720.png)
+![](../attachment/Pasted%20image%2020250902123720.png)
 - **关键观察**：drifting 只发生在 causal sampling (即只根据过去帧生成)，如果能给模型提高未来帧，哪怕只有一帧都能消除漂移
 - 因此考虑采用双向生成方法 bi-directional approach，第一次循环同时生成起始与结束帧，之后循环中来填补中间的内容，如上图b，因为第一次循环就产生最后一帧，因此这个最后一帧不会有 drifting
 - 如图c，考虑反向的 anti-drifting，即第一次循环生成首尾帧后，从反方向向前生成，可以视为对第一帧的不断拟合，
   这个方法对 image-to-video 模型十分有效，它将用户的输入图像视为高质量首帧，从后不断生成逼近输入图像
-
----
-## 09-03
-[code learning](多阶段视频数据处理框架.md#处理代码学习)
-
-新学的 **Tips**：将arxiv论文的网站改为alphaXiv能一键生成大纲
-例如：
-https://arxiv.org/abs/1904.05862
--> https://www.alphaxiv.org/abs/1904.05862
