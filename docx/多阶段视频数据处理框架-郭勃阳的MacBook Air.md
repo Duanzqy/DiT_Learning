@@ -98,13 +98,3 @@ self.queues = {task: queue.Queue() for task in self.sequential_tasks}
 
 #### 具体任务实现
 ###### 任务1：AV_Frames_Extractor
-- 统一视频帧率等信息
-- 输出统一标准化的视频与音频
-###### 任务2：Aud_Feature_Extractor
-- 读取前一个任务得到的视频与音频
-- 保留语音帧 > 50 以及音视频对齐的视频
-
-**可以应用的思路**：
-每个任务的传入参数都是一致的例如 (self, vid_path, save_dir, debug_dir='none')
-
-中间如果产生新的文件，可以为每个需要处理的视频建立一个文件夹，将中间文件放入，保存中间文件的时候用 save_dir + 固定的字符，方便后续的任务使用
