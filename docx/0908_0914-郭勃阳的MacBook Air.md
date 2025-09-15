@@ -141,19 +141,3 @@ StreamMe
 
 #### Step2
 刚刚发现好像可以直接下载 VAD （Voice activity detection），直接全部下载下来分析了
-
-先让它下着，明天再来处理
-
-## 0912
-分析完所有视频的 vad，进一步分析视频中参与者的数量，之后根据
-1. 说话时长 > 60
-2. 视频的说话时长在相同参与者中排名前15%
-筛选出 15656个视频，下载至
-```/home/juyonggroup/shared3dv/dataset/seamless_interaction/speech_radio_60/```
-并且附上 metadata.csv，包含相对路径等数据
-
-## 0913-0914
-Hollow Knight: SilkSong
-
-## 0915-0921
-准备博资考试
